@@ -337,6 +337,33 @@
             color: #000000;
         }
 
+        .copy-btn {
+            background: white;
+            color: #000000;
+            border: 2px solid #000000;
+            padding: 6px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .copy-btn:hover {
+            background: #000000;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .copy-btn.copied {
+            background: #4CAF50;
+            border-color: #4CAF50;
+            color: white;
+        }
+
         @media (max-width: 768px) {
             .logo-container img {
                 max-width: 140px;
@@ -460,26 +487,20 @@
                     <label>匯款帳號後五碼 *</label>
                     <input type="text" id="accountLast5" maxlength="5" required>
                 </div>
-                <div class="form-group">
-                    <label>匯款截圖 *</label>
-                    <input type="file" id="paymentScreenshot" accept="image/*" required style="padding: 10px;">
-                    <small style="color: #666; display: block; margin-top: 5px;">請上傳匯款證明截圖（支援 JPG、PNG 格式）</small>
-                </div>
 
-                
                 <!-- 匯款資訊顯示 -->
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; margin: 20px 0; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);">
+                <div style="background: linear-gradient(135deg, #2c2c2c 0%, #1a1a1a 100%); color: white; padding: 20px; border-radius: 12px; margin: 20px 0; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);">
                     <h3 style="margin: 0 0 15px 0; font-size: 1.2em; display: flex; align-items: center;">
                         <span style="font-size: 1.5em; margin-right: 10px;">🏦</span>
                         匯款資訊
                     </h3>
-                    <div style="background: rgba(255, 255, 255, 0.15); padding: 15px; border-radius: 8px; backdrop-filter: blur(10px);">
+                    <div style="background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.2);">
                         <p style="margin: 8px 0; font-size: 1.05em;"><strong>銀行名稱：</strong>Line Bank</p>
                         <p style="margin: 8px 0; font-size: 1.05em;"><strong>銀行代碼：</strong>824</p>
-                        <p style="margin: 8px 0; font-size: 1.05em; display: flex; align-items: center; gap: 10px;">
+                        <p style="margin: 8px 0; font-size: 1.05em; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                             <span><strong>帳號：</strong><span id="bankAccount">111021661379</span></span>
-                            <button onclick="copyBankAccount()" style="background: rgba(255, 255, 255, 0.9); color: #667eea; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.9em; font-weight: bold; transition: all 0.3s; display: flex; align-items: center; gap: 5px;" onmouseover="this.style.background='white'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.9)'; this.style.transform='scale(1)'">
-                                <span>📋</span> 
+                            <button onclick="copyBankAccount()" class="copy-btn" id="copyBtn">
+                                <span>📋</span>
                                 <span id="copyButtonText">複製</span>
                             </button>
                         </p>
@@ -489,6 +510,11 @@
                     </p>
                 </div>
 
+                <div class="form-group">
+                    <label>匯款截圖 *</label>
+                    <input type="file" id="paymentScreenshot" accept="image/*" required style="padding: 10px;">
+                    <small style="color: #666; display: block; margin-top: 5px;">請上傳匯款證明截圖（支援 JPG、PNG 格式）</small>
+                </div>
                 <div class="form-group">
                     <label>備註</label>
                     <textarea id="orderNote" rows="2"></textarea>
@@ -652,6 +678,55 @@
             cart.splice(index, 1);
             updateCartBadge();
             renderCart();
+        }
+
+        // 複製銀行帳號功能
+        function copyBankAccount() {
+            const accountNumber = document.getElementById('bankAccount').textContent;
+            const buttonText = document.getElementById('copyButtonText');
+            const button = document.getElementById('copyBtn');
+
+            // 使用 Clipboard API 複製文字
+            navigator.clipboard.writeText(accountNumber).then(() => {
+                // 複製成功，更改按鈕樣式
+                buttonText.textContent = '已複製！';
+                button.classList.add('copied');
+
+                // 2秒後恢復原狀
+                setTimeout(() => {
+                    buttonText.textContent = '複製';
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                // 如果 Clipboard API 不支援，使用舊方法
+                const textArea = document.createElement('textarea');
+                textArea.value = accountNumber;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '0';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+
+                try {
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        buttonText.textContent = '已複製！';
+                        button.classList.add('copied');
+
+                        setTimeout(() => {
+                            buttonText.textContent = '複製';
+                            button.classList.remove('copied');
+                        }, 2000);
+                    } else {
+                        alert('複製失敗，請手動複製帳號：' + accountNumber);
+                    }
+                } catch (err) {
+                    alert('複製失敗，請手動複製帳號：' + accountNumber);
+                }
+
+                document.body.removeChild(textArea);
+            });
         }
 
         // 壓縮圖片函數
